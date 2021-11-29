@@ -3,75 +3,78 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRef, useState } from "react";
 
 const Wrapper = styled.div`
-  height: 100vh;
   width: 100vw;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
 `;
 
+const BoxWrapper = styled.div`
+  width: 600px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 20px;
+  div:first-child,
+  div:last-child {
+    grid-column: span 2;
+  }
+`;
+
 const Box = styled(motion.div)`
-  width: 200px;
-  height: 100px;
+  height: 150px;
   background-color: white;
   border-radius: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 32px;
-  position: absolute;
-  top: 100px;
+  font-size: 12px;
   box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.1), 0px 10px 20px rgba(0, 0, 0, 0.06);
 `;
 
-const boxVariants = {
+const Overlay = styled(motion.div)`
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const OverlayVariants = {
   initial: {
-    x: 800,
-    opacity: 0,
-    scale: 0,
+    backgroundColor: "rgba(0, 0, 0, 0)",
   },
   animate: {
-    x: 0,
-    opacity: 1,
-    scale: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   exit: {
-    x: -800,
-    opacity: 0,
-    scale: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.0)",
   },
 };
 
-const Button = styled.button``;
-
 function App() {
-  const [index, setIndex] = useState(1);
-  const rightPlease = () => setIndex((prev) => (prev === 10 ? 1 : prev + 1));
-  const leftPlease = () => setIndex((prev) => (prev === 1 ? 10 : prev - 1));
+  const [id, setId] = useState<string | null>(null);
   return (
     <Wrapper>
-      <Button onClick={leftPlease} style={{ left: "50px" }}>
-        left
-      </Button>
+      <BoxWrapper>
+        {[1, 2, 3, 4].map((id) => {
+          return <Box layoutId={id + ""} onClick={() => setId(id + "")}></Box>;
+        })}
+      </BoxWrapper>
       <AnimatePresence>
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) =>
-          i === index ? (
-            <Box
-              variants={boxVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ type: "tween", duration: 1 }}
-              key={i}
-            >
-              {i}
-            </Box>
-          ) : null
-        )}
+        {id ? (
+          <Overlay
+            variants={OverlayVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            onClick={() => setId(null)}
+          >
+            <Box layoutId={id} style={{ width: 500, height: 350 }}></Box>
+          </Overlay>
+        ) : null}
       </AnimatePresence>
-      <Button onClick={rightPlease} style={{ right: "50px" }}>
-        right
-      </Button>
     </Wrapper>
   );
 }
