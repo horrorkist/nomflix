@@ -1,139 +1,78 @@
-import React from "react";
 import styled from "styled-components";
-import {
-  DragDropContext,
-  Droppable,
-  DropResult,
-  Draggable,
-} from "react-beautiful-dnd";
-import { useRecoilState } from "recoil";
-import { IToDoState, toDoState } from "./atoms";
-import Board from "./Components/Board";
-import TrashBin from "./Components/TrashCan";
-import CreateNewBoard from "./Components/CreateNewBoard";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRef, useState } from "react";
 
 const Wrapper = styled.div`
+  height: 100vh;
+  width: 100vw;
   display: flex;
-  max-width: 1000px;
-  width: 100%;
-  margin: 0 auto;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  flex-direction: column;
 `;
 
-const Boards = styled.div`
-  display: grid;
-  grid-template-columns: repeat(4, 300px);
-  gap: 20px;
+const Box = styled(motion.div)`
+  width: 200px;
+  height: 100px;
+  background-color: white;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.1), 0px 10px 20px rgba(0, 0, 0, 0.06);
+`;
+
+const boxVariants = {
+  initial: {
+    x: 800,
+    opacity: 0,
+    scale: 0,
+  },
+  animate: {
+    x: 0,
+    opacity: 1,
+    scale: 1,
+  },
+  exit: {
+    x: -800,
+    opacity: 0,
+    scale: 0,
+  },
+};
+
+const Button = styled.button`
+  position: absolute;
 `;
 
 function App() {
-  const [toDos, setToDos] = useRecoilState(toDoState);
-  const onDragEnd = ({
-    type,
-    draggableId,
-    destination,
-    source,
-  }: DropResult) => {
-    if (!destination) return;
-    if (destination?.droppableId === "trashBin") {
-      // delete toDo
-      setToDos((oldToDos) => {
-        const sourceCopy = [...oldToDos[source.droppableId]];
-        return {
-          ...oldToDos,
-          [source.droppableId]: [
-            ...oldToDos[source.droppableId].slice(0, source.index),
-            ...oldToDos[source.droppableId].slice(source.index + 1),
-          ],
-        };
-      });
-      return;
-    }
-
-    if (type === "board") {
-      if (destination.index === source.index) return;
-      setToDos((oldToDos) => {
-        const keyList = Object.keys(toDos);
-        let sourceKey: string, destKey: string;
-        keyList.forEach((element, index) => {
-          if (index === source.index) sourceKey = element;
-          if (index === destination.index) destKey = element;
-        });
-        const newToDos: IToDoState = {};
-        keyList.forEach((element) => {
-          if (element === sourceKey) return;
-          if (element === destKey && source.index > destination.index) {
-            newToDos[sourceKey] = [...oldToDos[sourceKey]];
-          }
-          newToDos[element] = [...oldToDos[element]];
-          if (element === destKey && source.index < destination.index) {
-            newToDos[sourceKey] = [...oldToDos[sourceKey]];
-          }
-        });
-        return newToDos;
-      });
-      return;
-    }
-
-    if (destination?.droppableId === source.droppableId) {
-      setToDos((oldToDos) => {
-        const boardCopy = [...oldToDos[source.droppableId]];
-        boardCopy.splice(
-          destination?.index,
-          0,
-          ...boardCopy.splice(source.index, 1)
-        );
-        return {
-          ...oldToDos,
-          [source.droppableId]: boardCopy,
-        };
-      });
-    }
-
-    if (destination?.droppableId !== source.droppableId) {
-      // cross board movement
-      setToDos((oldToDos) => {
-        const sourceCopy = [...oldToDos[source.droppableId]];
-        const destCopy = [...oldToDos[destination.droppableId]];
-        const targetElement = sourceCopy.splice(source.index, 1);
-        destCopy.splice(destination.index, 0, ...targetElement);
-        return {
-          ...oldToDos,
-          [source.droppableId]: sourceCopy,
-          [destination.droppableId]: destCopy,
-        };
-      });
-    }
-  };
+  const [index, setIndex] = useState(1);
+  const rightPlease = () => setIndex((prev) => (prev === 10 ? 1 : prev + 1));
+  const leftPlease = () => setIndex((prev) => (prev === 1 ? 10 : prev - 1));
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Wrapper>
-        <CreateNewBoard />
-        <Droppable
-          droppableId="droppableBoards"
-          type="board"
-          direction="horizontal"
-        >
-          {(provided, snapshot) => (
-            <Boards ref={provided.innerRef}>
-              {Object.keys(toDos).map((boardId, index) => (
-                <Board
-                  boardIndex={index}
-                  boardId={boardId}
-                  key={boardId}
-                  toDos={toDos[boardId]}
-                />
-              ))}
-              {provided.placeholder}
-            </Boards>
-          )}
-        </Droppable>
-        <TrashBin />
-      </Wrapper>
-    </DragDropContext>
+    <Wrapper>
+      <Button onClick={leftPlease} style={{ left: "50px" }}>
+        left
+      </Button>
+      <AnimatePresence>
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) =>
+          i === index ? (
+            <Box
+              variants={boxVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: "tween", duration: 1 }}
+              key={i}
+            >
+              {i}
+            </Box>
+          ) : null
+        )}
+      </AnimatePresence>
+      <Button onClick={rightPlease} style={{ right: "50px" }}>
+        right
+      </Button>
+    </Wrapper>
   );
 }
 
