@@ -19,6 +19,8 @@ const Box = styled(motion.div)`
   justify-content: center;
   align-items: center;
   font-size: 32px;
+  position: absolute;
+  top: 100px;
   box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.1), 0px 10px 20px rgba(0, 0, 0, 0.06);
 `;
 
@@ -40,9 +42,7 @@ const boxVariants = {
   },
 };
 
-const Button = styled.button`
-  position: absolute;
-`;
+const Button = styled.button``;
 
 function App() {
   const [index, setIndex] = useState(1);
