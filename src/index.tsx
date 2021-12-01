@@ -57,10 +57,12 @@ table {
 }
 * {
   box-sizing: border-box;
-  &::-webkit-scrollbar {
-    display: none !important;
-  }
 }
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   font-family: 'Source Sans Pro', sans-serif;
   background-color: ${(props) => props.theme.black.veryDark};
