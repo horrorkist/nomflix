@@ -66,6 +66,11 @@ body {
   font-weight: 500;
   background-color: black;
 }
+th, td {
+  &::-webkit-scrollbar {
+    display: none !important;
+  }
+}
 `;
 
 const client = new QueryClient();
