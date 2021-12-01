@@ -57,6 +57,9 @@ table {
 }
 * {
   box-sizing: border-box;
+  &::-webkit-scrollbar {
+    display: none !important;
+  }
 }
 body {
   font-family: 'Source Sans Pro', sans-serif;
@@ -65,11 +68,6 @@ body {
   line-height: 1.2;
   font-weight: 500;
   background-color: black;
-}
-th, td {
-  &::-webkit-scrollbar {
-    display: none !important;
-  }
 }
 `;
 
