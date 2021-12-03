@@ -1,14 +1,19 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useViewportScroll } from "framer-motion";
 import { useQuery } from "react-query";
 import styled from "styled-components";
 import { getMovies, IGetMoviesResult } from "../api";
 import { makeImgPath } from "../utils";
-import { useEffect, useState } from "react";
-import { Navigate, useMatch, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useMatch, useNavigate } from "react-router-dom";
+import { useSetRecoilState } from "recoil";
+import { isInBigBox } from "../atom";
 
-const Wrapper = styled.div`
+const Wrapper = styled.div<{ isInBigBox: Boolean }>`
   background-color: black;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
 `;
 
 const Banner = styled.div<{ bgPhoto: string }>`
@@ -17,7 +22,7 @@ const Banner = styled.div<{ bgPhoto: string }>`
   flex-direction: column;
   justify-content: center;
   padding: 50px;
-  background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8)),
+  background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)),
     url(${(props) => makeImgPath(props.bgPhoto)});
   background-size: cover; ;
 `;
@@ -34,7 +39,6 @@ const Overview = styled.p`
 
 const Slider = styled.div`
   position: relative;
-  top: -60px;
 `;
 
 const Row = styled(motion.div)`
@@ -86,21 +90,39 @@ const Info = styled(motion.div)`
 `;
 
 const Overlay = styled(motion.div)`
-  width: 100vw;
+  background-color: rgba(0, 0, 0, 0.5);
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.3);
   position: fixed;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  top: 0;
+  left: 0;
+  right: 0;
   opacity: 0;
+  z-index: 100;
+  overflow-y: scroll;
 `;
 
 const BigBox = styled(motion.div)`
-  width: 50vw;
-  height: 70vh;
-  background-color: red;
+  width: 60vw;
+  margin: 0 auto;
+  margin-top: 50px;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: ${(props) => props.theme.black.lighter};
+`;
+
+const BigBoxText = styled.div`
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  h3 {
+    font-size: 24px;
+    margin-bottom: 15px;
+  }
+  p {
+    flex-grow: 1;
+  }
 `;
 
 const rowVariants = {
@@ -139,10 +161,22 @@ function Home() {
   );
   const navigate = useNavigate();
   const bigBoxMatch = useMatch("/movie/:movieId");
+  const clickedMovie =
+    bigBoxMatch?.params.movieId &&
+    data?.results.find((movie) => movie.id + "" === bigBoxMatch.params.movieId);
   const boxWidth = (window.outerWidth - 25 - 100) / 6;
   const boxHeight = boxWidth / 1.6;
   const [index, setIndex] = useState(0);
   const [isRowLeaving, setIsRowLeaving] = useState(false);
+  const setInBox = useSetRecoilState(isInBigBox);
+  const onBoxClicked = (url: string) => {
+    setInBox(true);
+    navigate(url);
+  };
+  const onOverlayClick = () => {
+    setInBox(false);
+    navigate(-1);
+  };
   const toggleIsRowLeaving = () => setIsRowLeaving((prev) => !prev);
   const incIndex = () => {
     if (data) {
@@ -153,12 +187,11 @@ function Home() {
       setIndex((prev) => (prev === maxPageIndex ? 0 : prev + 1));
     }
   };
-  console.log("rerendered");
 
   if (isLoading) return null;
 
   return (
-    <Wrapper style={{ width: "100vw", height: "200vh" }}>
+    <Wrapper style={{ width: "100vw" }} isInBigBox={bigBoxMatch ? true : false}>
       <Banner onClick={incIndex} bgPhoto={data?.results[0].backdrop_path || ""}>
         <Title>{data?.results[0].title}</Title>
         <Overview>{data?.results[0].overview}</Overview>
@@ -179,7 +212,7 @@ function Home() {
               .map((movie, index) => (
                 <Box
                   layoutId={movie.id + ""}
-                  onClick={() => navigate(`/movie/${movie.id}`)}
+                  onClick={() => onBoxClicked(`/movie/${movie.id}`)}
                   variants={boxVariants}
                   initial="initial"
                   whileHover="hover"
@@ -201,11 +234,29 @@ function Home() {
       <AnimatePresence>
         {bigBoxMatch ? (
           <Overlay
-            onClick={() => navigate(-1)}
+            onClick={onOverlayClick}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <BigBox layoutId={bigBoxMatch.params.movieId}></BigBox>
+            <BigBox layoutId={bigBoxMatch.params.movieId}>
+              {clickedMovie && (
+                <>
+                  <img
+                    width="100%"
+                    src={`${makeImgPath(clickedMovie.backdrop_path)}`}
+                    alt=""
+                  />
+                  <BigBoxText>
+                    <h3>{clickedMovie.title}</h3>
+                    <p>{clickedMovie.overview}</p>
+                    <p>{clickedMovie.overview}</p>
+                    <p>{clickedMovie.overview}</p>
+                    <p>{clickedMovie.overview}</p>
+                    <p>{clickedMovie.overview}</p>
+                  </BigBoxText>
+                </>
+              )}
+            </BigBox>
           </Overlay>
         ) : null}
       </AnimatePresence>
